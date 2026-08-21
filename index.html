@@ -3,99 +3,153 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
-<meta name="theme-color" content="#0f1115">
+<meta name="theme-color" content="#0a0a0f">
 <title>Krea 提示词生成器</title>
 <style>
+  :root {
+    --bg: #0a0a0f;
+    --bg-soft: #12121a;
+    --card: rgba(255,255,255,0.04);
+    --card-border: rgba(255,255,255,0.08);
+    --text: #f0f0f5;
+    --text-dim: #9a9ab0;
+    --text-faint: #6a6a80;
+    --accent: #7c6cff;
+    --accent-2: #4f8cff;
+    --accent-grad: linear-gradient(135deg, #7c6cff 0%, #4f8cff 100%);
+    --danger: #ff6b6b;
+    --radius: 16px;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html { height: 100%; }
   body {
-    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-    background: #0f1115; color: #e8eaed; min-height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    background-image:
+      radial-gradient(1200px 600px at 100% -10%, rgba(124,108,255,0.12), transparent 60%),
+      radial-gradient(900px 500px at -10% 30%, rgba(79,140,255,0.10), transparent 60%),
+      radial-gradient(800px 600px at 50% 110%, rgba(124,108,255,0.06), transparent 60%);
+    color: var(--text); min-height: 100%;
     display: flex; flex-direction: column; align-items: center;
-    padding: 16px 12px calc(16px + env(safe-area-inset-bottom));
+    padding: 20px 16px calc(24px + env(safe-area-inset-bottom));
   }
-  .container { width: 100%; max-width: 640px; }
+  .container { width: 100%; max-width: 620px; }
 
-  h1 { font-size: 20px; margin-bottom: 6px; letter-spacing: 0.5px; }
-  .sub { color: #9aa0a6; font-size: 12px; margin-bottom: 16px; line-height: 1.5; }
+  header { text-align: center; margin-bottom: 22px; }
+  .logo {
+    width: 52px; height: 52px; margin: 0 auto 12px; border-radius: 14px;
+    background: var(--accent-grad); display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 800; color: #fff;
+    box-shadow: 0 8px 24px rgba(124,108,255,0.35);
+  }
+  h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+  .sub { color: var(--text-dim); font-size: 12.5px; margin-top: 6px; line-height: 1.5; }
 
   .tabs {
-    position: sticky; top: 0; z-index: 10;
-    display: flex; gap: 6px; margin-bottom: 14px;
-    background: rgba(15,17,21,0.92); backdrop-filter: blur(8px);
-    padding: 6px 0; border-radius: 10px;
+    display: flex; gap: 4px; margin-bottom: 16px;
+    background: var(--bg-soft); padding: 4px; border-radius: 12px;
+    border: 1px solid var(--card-border);
   }
   .tab {
-    flex: 1; padding: 12px 0; border-radius: 8px; cursor: pointer;
-    border: none; background: #171a21; color: #9aa0a6;
-    font-size: 15px; font-weight: 600; text-align: center;
-    min-height: 44px; display: flex; align-items: center; justify-content: center;
+    flex: 1; padding: 11px 0; border-radius: 9px; cursor: pointer;
+    border: none; background: transparent; color: var(--text-dim);
+    font-size: 14px; font-weight: 600; text-align: center;
+    min-height: 40px; transition: all 0.2s;
   }
-  .tab.active { background: #4f8cff; color: #fff; }
+  .tab.active { background: var(--accent-grad); color: #fff; box-shadow: 0 4px 12px rgba(124,108,255,0.3); }
+
+  .card {
+    background: var(--card); border: 1px solid var(--card-border);
+    border-radius: var(--radius); padding: 16px; margin-bottom: 14px;
+    backdrop-filter: blur(10px);
+  }
 
   .panel { display: none; }
   .panel.active { display: block; }
 
   textarea {
     width: 100%; min-height: 110px; padding: 14px; border-radius: 12px;
-    border: 1px solid #333; background: #171a21; color: #e8eaed;
-    font-size: 16px; resize: vertical; outline: none; line-height: 1.6;
-    -webkit-appearance: none;
+    border: 1px solid var(--card-border); background: rgba(0,0,0,0.35);
+    color: var(--text); font-size: 15px; resize: vertical; outline: none;
+    line-height: 1.6; font-family: inherit; transition: border-color 0.2s;
   }
-  textarea:focus, select:focus { border-color: #4f8cff; }
+  textarea:focus, select:focus { border-color: var(--accent); }
 
   .upload-box {
-    border: 2px dashed #333; border-radius: 12px; padding: 28px 12px;
-    text-align: center; color: #9aa0a6; font-size: 14px; cursor: pointer;
-    background: #171a21; margin-top: 4px;
+    border: 2px dashed rgba(255,255,255,0.15); border-radius: 12px;
+    padding: 32px 12px; text-align: center; color: var(--text-dim);
+    font-size: 14px; cursor: pointer; background: rgba(0,0,0,0.2);
+    transition: all 0.2s;
   }
-  .upload-box.have-file { border-color: #4f8cff; color: #4f8cff; }
-  #preview { width: 100%; max-height: 320px; object-fit: contain; border-radius: 10px; margin-top: 10px; display: none; border: 1px solid #333; background:#000; }
+  .upload-box:hover { border-color: var(--accent); }
+  .upload-box.have-file { border-color: var(--accent); color: var(--accent); }
+  .upload-icon { font-size: 30px; margin-bottom: 8px; display: block; }
+  #preview {
+    width: 100%; max-height: 320px; object-fit: contain; border-radius: 10px;
+    margin-top: 12px; display: none; border: 1px solid var(--card-border);
+    background: #000;
+  }
 
-  .row { display: flex; gap: 8px; margin: 12px 0; align-items: stretch; }
+  .row { display: flex; gap: 8px; margin-top: 12px; align-items: stretch; }
   select {
-    flex: 1; min-width: 0; padding: 12px 10px; border-radius: 10px;
-    border: 1px solid #333; background: #171a21; color: #e8eaed;
-    font-size: 14px; -webkit-appearance: none; appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%239aa0a6' stroke-width='2' fill='none' stroke-linecap='round'/></svg>");
+    flex: 1; min-width: 0; padding: 12px 32px 12px 12px; border-radius: 10px;
+    border: 1px solid var(--card-border); background: rgba(0,0,0,0.35);
+    color: var(--text); font-size: 13.5px; outline: none;
+    -webkit-appearance: none; appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%239a9ab0' stroke-width='2' fill='none' stroke-linecap='round'/></svg>");
     background-repeat: no-repeat; background-position: right 12px center;
   }
-  button {
-    padding: 0 20px; border: none; border-radius: 10px; cursor: pointer;
-    font-size: 16px; font-weight: 600; background: #4f8cff; color: #fff;
-    min-height: 44px; white-space: nowrap; flex-shrink: 0;
-  }
-  button:hover { background: #6a9dff; }
-  button:active { background: #3a76e0; }
-  button:disabled { opacity: 0.5; cursor: not-allowed; }
-  button.full { width: 100%; margin-top: 8px; }
 
-  .status { font-size: 12px; color: #9aa0a6; min-height: 16px; margin: 6px 0; line-height: 1.5; }
+  button.primary {
+    padding: 0 24px; border: none; border-radius: 10px; cursor: pointer;
+    font-size: 15px; font-weight: 700; color: #fff; min-height: 44px;
+    background: var(--accent-grad); flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(124,108,255,0.3);
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  button.primary:active { transform: scale(0.97); }
+  button.primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .status {
+    font-size: 12px; color: var(--text-faint); min-height: 16px;
+    margin: 8px 2px 0; line-height: 1.5;
+  }
+  .status.loading { color: var(--accent-2); }
+
   .result {
-    margin-top: 12px; padding: 14px; border-radius: 12px; background: #171a21;
-    border: 1px solid #333; white-space: pre-wrap; word-break: break-word;
-    font-size: 14px; line-height: 1.7; min-height: 80px;
+    margin-top: 4px; padding: 16px; border-radius: var(--radius);
+    background: var(--card); border: 1px solid var(--card-border);
+    white-space: pre-wrap; word-break: break-word; font-size: 14px;
+    line-height: 1.75; min-height: 80px; backdrop-filter: blur(10px);
   }
+  .result:empty::before { content: "结果将显示在这里"; color: var(--text-faint); }
+
   .copy-btn {
-    width: 100%; margin-top: 10px; min-height: 44px;
-    background: #2a3038; border: 1px solid #333;
+    width: 100%; margin-top: 10px; min-height: 44px; cursor: pointer;
+    border: 1px solid var(--card-border); border-radius: 10px;
+    background: rgba(255,255,255,0.05); color: var(--text);
+    font-size: 14px; font-weight: 600; transition: background 0.2s;
   }
-  .copy-btn:hover { background: #3a424c; }
-  .error { border-color: #d93025; color: #f28b82; }
-  .hint { font-size: 11px; color: #6a7078; margin-top: 6px; line-height: 1.5; }
-  .cors-warn { font-size: 11px; color: #e0a030; margin-top: 6px; line-height: 1.5; }
+  .copy-btn:hover { background: rgba(255,255,255,0.1); }
+  .copy-btn:active { transform: scale(0.99); }
+
+  .error { border-color: var(--danger); color: var(--danger); }
+  .hint { font-size: 11px; color: var(--text-faint); margin-top: 8px; line-height: 1.5; }
+  .cors-warn { font-size: 11px; color: #e0a030; margin-top: 8px; line-height: 1.5; }
 
   @media (min-width: 768px) {
-    body { padding: 40px 24px; }
+    body { padding: 48px 24px; }
     h1 { font-size: 26px; }
-    .tabs { position: static; }
   }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>Krea 提示词生成器</h1>
-  <div class="sub">文本扩写（9 节点） · 图片分析（3 视觉节点）<br>浏览器直连 llama.cpp 节点</div>
+  <header>
+    <div class="logo">K</div>
+    <h1>Krea 提示词生成器</h1>
+    <div class="sub">文本扩写（9 节点） · 图片分析（3 视觉节点）</div>
+  </header>
 
   <div class="tabs">
     <button class="tab active" id="tabText" onclick="switchTab('text')">文本扩写</button>
@@ -104,46 +158,51 @@
 
   <!-- 文本扩写面板 -->
   <div class="panel active" id="panel-text">
-    <textarea id="input" placeholder="输入简短提示词，例如：&#10;美女裸体逛超市&#10;小学生放学&#10;超人和绯红女巫"></textarea>
-    <div class="row">
-      <select id="serverText">
-        <option value="http://158.255.3.189:8080">gemma-4 heretic（最快）</option>
-        <option value="http://116.148.210.127:8000">gemma-4 QAT（默认）</option>
-        <option value="http://210.99.32.60:8000">gemma-4 Q4_K_M</option>
-        <option value="http://60.208.63.69:8001">qwen9b</option>
-        <option value="http://61.144.189.162:8000">gemma-4-26b-it</option>
-        <option value="http://20.118.15.50:80">Qwen3.6 Uncensored</option>
-        <option value="http://178.131.105.131:8000">qwen35b</option>
-        <option value="http://51.81.153.207:8080">Qwen3.6 MXFP4</option>
-        <option value="http://172.168.53.235:80">Qwen3.5 Uncensored</option>
-      </select>
-      <button id="btnExpand" onclick="doExpand()">扩写</button>
+    <div class="card">
+      <textarea id="input" placeholder="输入简短提示词，例如：&#10;美女裸体逛超市&#10;小学生放学&#10;超人和绯红女巫"></textarea>
+      <div class="row">
+        <select id="serverText">
+          <option value="http://158.255.3.189:8080">gemma-4 heretic（最快）</option>
+          <option value="http://116.148.210.127:8000">gemma-4 QAT（默认）</option>
+          <option value="http://210.99.32.60:8000">gemma-4 Q4_K_M</option>
+          <option value="http://60.208.63.69:8001">qwen9b</option>
+          <option value="http://61.144.189.162:8000">gemma-4-26b-it</option>
+          <option value="http://20.118.15.50:80">Qwen3.6 Uncensored</option>
+          <option value="http://178.131.105.131:8000">qwen35b</option>
+          <option value="http://51.81.153.207:8080">Qwen3.6 MXFP4</option>
+          <option value="http://172.168.53.235:80">Qwen3.5 Uncensored</option>
+        </select>
+        <button class="primary" id="btnExpand" onclick="doExpand()">扩写</button>
+      </div>
+      <div class="cors-warn" id="corsWarnText" style="display:none">若提示跨域错误，说明浏览器阻止了直连节点，请改用 CF/HTTPS 部署方案。</div>
+      <div class="status" id="statusText"></div>
     </div>
-    <div class="cors-warn" id="corsWarnText" style="display:none">若提示跨域错误，说明浏览器阻止了直连节点（HTTPS 页面请求 HTTP 节点会被浏览器拦截），请改用 CF/HTTPS 部署方案。</div>
-    <div class="status" id="statusText"></div>
   </div>
 
   <!-- 图片分析面板 -->
   <div class="panel" id="panel-image">
-    <div class="upload-box" id="uploadBox" onclick="document.getElementById('fileInput').click()">
-      <div id="uploadText">点击选择图片</div>
+    <div class="card">
+      <div class="upload-box" id="uploadBox" onclick="document.getElementById('fileInput').click()">
+        <span class="upload-icon">🖼️</span>
+        <div id="uploadText">点击选择图片</div>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" style="display:none">
+      <img id="preview" alt="">
+      <div class="row">
+        <select id="serverImage">
+          <option value="http://158.255.3.189:8080">gemma-4 heretic（视觉）</option>
+          <option value="http://116.148.210.127:8000">gemma-4 QAT（视觉）</option>
+          <option value="http://210.99.32.60:8000">gemma-4 Q4_K_M（视觉）</option>
+        </select>
+        <button class="primary" id="btnImage" onclick="doImage()">分析</button>
+      </div>
+      <div class="hint">仅支持 3 个视觉节点，分析后返回图片标签 + Krea 双语提示词</div>
+      <div class="cors-warn" id="corsWarnImage" style="display:none">若提示跨域错误，说明浏览器阻止了直连节点，请改用 CF/HTTPS 部署方案。</div>
+      <div class="status" id="statusImage"></div>
     </div>
-    <input type="file" id="fileInput" accept="image/*" style="display:none">
-    <img id="preview" alt="">
-    <div class="row">
-      <select id="serverImage">
-        <option value="http://158.255.3.189:8080">gemma-4 heretic（视觉）</option>
-        <option value="http://116.148.210.127:8000">gemma-4 QAT（视觉）</option>
-        <option value="http://210.99.32.60:8000">gemma-4 Q4_K_M（视觉）</option>
-      </select>
-      <button id="btnImage" onclick="doImage()">分析</button>
-    </div>
-    <div class="cors-warn" id="corsWarnImage" style="display:none">若提示跨域错误，说明浏览器阻止了直连节点，请改用 CF/HTTPS 部署方案。</div>
-    <div class="hint">仅支持 3 个视觉节点，分析后返回图片标签 + Krea 双语提示词</div>
-    <div class="status" id="statusImage"></div>
   </div>
 
-  <div class="result" id="result" placeholder="结果会显示在这里"></div>
+  <div class="result" id="result"></div>
   <button class="copy-btn" onclick="copyResult()" id="copyBtn" style="display:none">复制结果</button>
 </div>
 
@@ -193,7 +252,6 @@ Character Demographics: Faithfully preserve every character identity, age, ethni
 
 Authenticity over Perfection: Prioritize realistic, candid, and natural aesthetics over polished, studio-like perfection. Include subtle imperfections (e.g., slightly messy hair, natural skin texture, asymmetrical features), ambient or mixed lighting (soft window light, golden hour, street lamps), and everyday settings (home interiors, streets, cafes, parks) to evoke genuine life. Avoid overly symmetrical compositions, flawless skin, or dramatic artificial lighting unless the user explicitly asks for them.`;
 
-// 需要关闭思维链的节点
 const NO_THINKING_SERVERS = { "http://172.168.53.235:80": true };
 
 let currentTab = 'text';
@@ -222,6 +280,14 @@ document.getElementById('fileInput').addEventListener('change', (e) => {
   reader.readAsDataURL(file);
 });
 
+function setLoading(tab, loading) {
+  const btn = document.getElementById(tab === 'text' ? 'btnExpand' : 'btnImage');
+  const status = document.getElementById(tab === 'text' ? 'statusText' : 'statusImage');
+  btn.disabled = loading;
+  status.classList.toggle('loading', loading);
+  return status;
+}
+
 async function callNode(server, msgs, maxTokens, temperature) {
   const payload = { messages: msgs, max_tokens: maxTokens, temperature, stream: false };
   if (NO_THINKING_SERVERS[server]) payload.chat_template_kwargs = { enable_thinking: false };
@@ -238,11 +304,9 @@ async function callNode(server, msgs, maxTokens, temperature) {
 async function doExpand() {
   const input = document.getElementById('input').value.trim();
   const server = document.getElementById('serverText').value;
-  const btn = document.getElementById('btnExpand');
-  const status = document.getElementById('statusText');
   if (!input) { showResult('请输入提示词', true); return; }
-  btn.disabled = true;
-  status.textContent = '正在扩写，请稍候...（reasoning 模型可能需 1-2 分钟）';
+  const status = setLoading('text', true);
+  status.textContent = '正在扩写，请稍候...';
   document.getElementById('corsWarnText').style.display = 'none';
   try {
     const msgs = [
@@ -251,26 +315,24 @@ async function doExpand() {
     ];
     const result = await callNode(server, msgs, 3000, 0.8);
     showResult(result || '(无输出)');
-    status.textContent = '完成（' + server + '）';
+    status.textContent = '完成 · ' + server.replace('http://', '');
     scrollToResult();
   } catch (e) {
     status.textContent = '失败';
-    if (e.name === 'TypeError' && /fetch|network|CORS/i.test(e.message)) {
+    if (e.name === 'TypeError' && /fetch|network|CORS|Failed/i.test(e.message)) {
       document.getElementById('corsWarnText').style.display = 'block';
-      showResult('跨域/网络错误：HTTPS 页面请求 HTTP 节点被浏览器阻止。' + e.message, true);
+      showResult('跨域/网络错误：HTTPS 页面请求 HTTP 节点被浏览器阻止。', true);
     } else {
       showResult('错误: ' + e.message, true);
     }
-  } finally { btn.disabled = false; }
+  } finally { setLoading('text', false); }
 }
 
 async function doImage() {
   const server = document.getElementById('serverImage').value;
-  const btn = document.getElementById('btnImage');
-  const status = document.getElementById('statusImage');
   if (!selectedFileB64) { showResult('请先选择图片', true); return; }
-  btn.disabled = true;
-  status.textContent = '正在分析图片，请稍候...（约 30 秒）';
+  const status = setLoading('image', true);
+  status.textContent = '正在分析图片，请稍候...（约 30-60 秒）';
   document.getElementById('corsWarnImage').style.display = 'none';
   try {
     const tagMsgs = [
@@ -288,17 +350,17 @@ async function doImage() {
     ];
     const full = await callNode(server, step2, 4000, 0.8);
     showResult('【图片标签】\n' + tags + '\n\n【Krea 提示词】\n' + full);
-    status.textContent = '完成（' + server + '）';
+    status.textContent = '完成 · ' + server.replace('http://', '');
     scrollToResult();
   } catch (e) {
     status.textContent = '失败';
-    if (e.name === 'TypeError' && /fetch|network|CORS/i.test(e.message)) {
+    if (e.name === 'TypeError' && /fetch|network|CORS|Failed/i.test(e.message)) {
       document.getElementById('corsWarnImage').style.display = 'block';
-      showResult('跨域/网络错误：HTTPS 页面请求 HTTP 节点被浏览器阻止。' + e.message, true);
+      showResult('跨域/网络错误：HTTPS 页面请求 HTTP 节点被浏览器阻止。', true);
     } else {
       showResult('错误: ' + e.message, true);
     }
-  } finally { btn.disabled = false; }
+  } finally { setLoading('image', false); }
 }
 
 function showResult(text, isError) {
