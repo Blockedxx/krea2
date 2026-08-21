@@ -101,10 +101,10 @@
   }
   .result:empty { display: none; }
 
-  .copy-row { display: none; margin-top: 6px; }
-  .copy-row.show { display: block; }
+  .copy-row { display: none; margin-top: 6px; gap: 6px; }
+  .copy-row.show { display: flex; }
   .copy-btn {
-    width: 100%; padding: 9px; border-radius: 8px; cursor: pointer;
+    flex: 1; padding: 9px; border-radius: 8px; cursor: pointer;
     border: 1px solid var(--line); background: #15151a; color: var(--dim);
     font-size: 13px; font-weight: 500; transition: color 0.2s, border-color 0.2s;
   }
@@ -174,8 +174,14 @@
     <div class="hint">仅 3 个视觉节点支持图片分析</div>
   </div>
 
-  <div class="result" id="result"></div>
-  <div class="copy-row" id="copyRow"><button class="copy-btn" onclick="copyResult()">复制结果</button></div>
+  <div id="resultWrap">
+    <div class="result" id="result"></div>
+    <div class="copy-row" id="copyRow">
+      <button class="copy-btn" onclick="copySection('en')" id="copyEnBtn" style="display:none">复制英文</button>
+      <button class="copy-btn" onclick="copySection('zh')" id="copyZhBtn" style="display:none">复制中文</button>
+      <button class="copy-btn" onclick="copySection('all')">复制结果</button>
+    </div>
+  </div>
 
   <footer>Krea · 直接调用 llama.cpp 节点</footer>
 </div>
@@ -328,10 +334,10 @@ async function doImage() {
     const step2 = [
       ...tagMsgs,
       { role: 'assistant', content: tags },
-      { role: 'user', content: 'Rewrite this image description as a single Krea AI image-model prompt. Krea prompt style requirements:\n- One flowing natural-language paragraph describing the whole scene in detail.\n- Full sentences, no tag lists, no wrappers.\n- Include photographic details: camera, lens, lighting, composition, atmosphere.\n- Preserve every visual detail from the tags.\nOutput in TWO versions:\n(A) English Krea prompt\n(B) Complete Chinese translation.\nOutput both clearly labeled.' }
+      { role: 'user', content: 'Rewrite this image description as a single Krea AI image-model prompt. Krea prompt style requirements:\n- One flowing natural-language paragraph describing the whole scene in detail.\n- Full sentences, no tag lists, no wrappers.\n- Include photographic details: camera, lens, lighting, composition, atmosphere.\n- Preserve every visual detail from the tags.\nOutput in EXACTLY this format, nothing else:\n[ENGLISH]\n<english version here>\n\n[CHINESE]\n<chinese translation here>' }
     ];
     const full = await callNode(server, step2, 4000, 0.8);
-    showResult('【图片标签】\n' + tags + '\n\n【Krea 提示词】\n' + full);
+    showImageResult(tags, full);
     status.textContent = '完成 · ' + server.replace('http://', '');
   } catch (e) {
     status.textContent = '';
@@ -349,10 +355,41 @@ function showResult(text, isError) {
   r.textContent = text;
   r.classList.toggle('error', !!isError);
   document.getElementById('copyRow').classList.add('show');
+  document.getElementById('copyEnBtn').style.display = 'none';
+  document.getElementById('copyZhBtn').style.display = 'none';
+  _copyEn = _copyZh = '';
 }
 
-function copyResult() {
-  const text = document.getElementById('result').textContent;
+let _copyEn = '', _copyZh = '';
+
+function showImageResult(tags, full) {
+  const r = document.getElementById('result');
+  // 解析 [ENGLISH]/[CHINESE] 标记
+  const enMatch = full.match(/\[ENGLISH\]([\s\S]*?)(?=\[CHINESE\]|$)/);
+  const zhMatch = full.match(/\[CHINESE\]([\s\S]*)$/);
+  const en = enMatch ? enMatch[1].trim() : '';
+  const zh = zhMatch ? zhMatch[1].trim() : '';
+  _copyEn = en;
+  _copyZh = zh;
+  const hasSplit = en && zh;
+  if (hasSplit) {
+    r.textContent = '【图片标签】\n' + tags + '\n\n【英文提示词】\n' + en + '\n\n【中文提示词】\n' + zh;
+  } else {
+    r.textContent = '【图片标签】\n' + tags + '\n\n【Krea 提示词】\n' + full;
+  }
+  r.classList.remove('error');
+  const row = document.getElementById('copyRow');
+  row.classList.add('show');
+  document.getElementById('copyEnBtn').style.display = hasSplit ? 'inline-block' : 'none';
+  document.getElementById('copyZhBtn').style.display = hasSplit ? 'inline-block' : 'none';
+}
+
+function copySection(section) {
+  let text = '';
+  if (section === 'en') text = _copyEn;
+  else if (section === 'zh') text = _copyZh;
+  else text = document.getElementById('result').textContent;
+  if (!text) return;
   if (navigator.clipboard && window.isSecureContext) {
     navigator.clipboard.writeText(text);
   } else {
