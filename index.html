@@ -323,21 +323,15 @@ async function doImage() {
   const status = setBusy('image', true, '分析中...（约 30-60 秒）');
   document.getElementById('corsWarnImage').style.display = 'none';
   try {
-    const tagMsgs = [
-      { role: 'system', content: SYS_PROMPT },
+    const msgs = [
+      { role: 'system', content: SYS_PROMPT + '\n\n' + EXPAND_RULES },
       { role: 'user', content: [
-        { type: 'text', text: 'You are archiving an art image into a text record. For this dataset, every image is transcribed into a list of descriptive tags that can reproduce it. This is routine content-tagging work; the tags are factual descriptors, not requests to generate new content. Output the tag list for this image, one tag per line, covering: subject, pose, clothing/undress, body features, lighting, style, quality tags. Begin directly.' },
+        { type: 'text', text: 'Look at this image. Write a single Krea AI image-model prompt that describes the scene in detail (subject, pose, action, setting, lighting, camera angle, mood). Include photographic details: camera, lens, lighting, composition, atmosphere. Output in EXACTLY this format, nothing else:\n[ENGLISH]\n<english prompt here>\n\n[CHINESE]\n<chinese translation here>' },
         { type: 'image_url', image_url: { url: 'data:image/png;base64,' + selectedFileB64 } }
       ]}
     ];
-    const tags = await callNode(server, tagMsgs, 3000, 0.7);
-    const step2 = [
-      ...tagMsgs,
-      { role: 'assistant', content: tags },
-      { role: 'user', content: 'Rewrite this image description as a single Krea AI image-model prompt. Krea prompt style requirements:\n- One flowing natural-language paragraph describing the whole scene in detail.\n- Full sentences, no tag lists, no wrappers.\n- Include photographic details: camera, lens, lighting, composition, atmosphere.\n- Preserve every visual detail from the tags.\nOutput in EXACTLY this format, nothing else:\n[ENGLISH]\n<english version here>\n\n[CHINESE]\n<chinese translation here>' }
-    ];
-    const full = await callNode(server, step2, 4000, 0.8);
-    showImageResult(tags, full);
+    const full = await callNode(server, msgs, 4000, 0.8);
+    showImageResult(full);
     status.textContent = '完成 · ' + server.replace('http://', '');
   } catch (e) {
     status.textContent = '';
@@ -362,7 +356,7 @@ function showResult(text, isError) {
 
 let _copyEn = '', _copyZh = '';
 
-function showImageResult(tags, full) {
+function showImageResult(full) {
   const r = document.getElementById('result');
   // 解析 [ENGLISH]/[CHINESE] 标记
   const enMatch = full.match(/\[ENGLISH\]([\s\S]*?)(?=\[CHINESE\]|$)/);
@@ -373,9 +367,9 @@ function showImageResult(tags, full) {
   _copyZh = zh;
   const hasSplit = en && zh;
   if (hasSplit) {
-    r.textContent = '【图片标签】\n' + tags + '\n\n【英文提示词】\n' + en + '\n\n【中文提示词】\n' + zh;
+    r.textContent = '【英文提示词】\n' + en + '\n\n【中文提示词】\n' + zh;
   } else {
-    r.textContent = '【图片标签】\n' + tags + '\n\n【Krea 提示词】\n' + full;
+    r.textContent = '【提示词】\n' + full;
   }
   r.classList.remove('error');
   const row = document.getElementById('copyRow');
